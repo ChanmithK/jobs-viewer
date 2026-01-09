@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Jobs Viewer</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --surface: #ffffff;
+        --surface2: #f6f7fb;
+        --text: #111827;
+        --muted: #6b7280;
+        --border: rgba(17, 24, 39, 0.12);
+        --border2: rgba(17, 24, 39, 0.08);
+        --shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
+        --radius: 14px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          Arial;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 28px 16px 80px;
+      }
+
+      header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+        flex-wrap: wrap;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 22px;
+        letter-spacing: 0.2px;
+      }
+
+      .sub {
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .panel {
+        border: 1px solid var(--border2);
+        border-radius: var(--radius);
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .panelHead {
+        padding: 14px 14px 0;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: 1.2fr 0.9fr 0.9fr auto;
+        gap: 10px;
+        padding: 12px 14px 14px;
+        align-items: end;
+      }
+
+      @media (max-width: 920px) {
+        .controls {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .controls {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .field label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+
+      .input {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 14px;
+        outline: none;
+        background: var(--surface);
+        color: var(--text);
+      }
+
+      .input:focus {
+        border-color: rgba(17, 24, 39, 0.28);
+      }
+
+      .btn {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: var(--surface2);
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .btn:hover {
+        background: #eef0f7;
+      }
+
+      .jsonArea {
+        width: 100%;
+        min-height: 180px;
+        resize: vertical;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 13px;
+        line-height: 1.5;
+        outline: none;
+        background: var(--surface);
+        color: var(--text);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+      }
+
+      .jsonArea:focus {
+        border-color: rgba(17, 24, 39, 0.28);
+      }
+
+      .statusRow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 10px 14px 14px;
+        border-top: 1px solid var(--border2);
+        color: var(--muted);
+        font-size: 13px;
+        flex-wrap: wrap;
+      }
+
+      .error {
+        color: #b42318;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 16px;
+      }
+
+      @media (max-width: 720px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        width: 100%;
+        text-align: left;
+        border: 1px solid var(--border2);
+        border-radius: var(--radius);
+        background: var(--surface);
+        padding: 14px;
+        cursor: pointer;
+        transition: transform 120ms ease, box-shadow 120ms ease,
+          border-color 120ms ease;
+        box-shadow: 0 8px 22px rgba(17, 24, 39, 0.06);
+      }
+
+      .card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 34px rgba(17, 24, 39, 0.1);
+        border-color: rgba(17, 24, 39, 0.14);
+      }
+
+      .row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .logo {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        object-fit: cover;
+        border: 1px solid var(--border2);
+        background: var(--surface2);
+        flex: 0 0 auto;
+      }
+
+      .title {
+        font-weight: 800;
+        font-size: 16px;
+        margin: 0;
+        line-height: 1.25;
+      }
+
+      .meta {
+        margin-top: 5px;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      .meta strong {
+        color: var(--text);
+        font-weight: 700;
+      }
+
+      .chips {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border2);
+        background: var(--surface2);
+        color: var(--text);
+        font-size: 12px;
+        line-height: 1;
+      }
+
+      .footer {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 12px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .kbd {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+        font-size: 11px;
+        padding: 2px 8px;
+        border: 1px solid var(--border2);
+        border-bottom-width: 2px;
+        border-radius: 8px;
+        background: var(--surface2);
+        color: var(--text);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="wrap">
+      <header>
+        <div>
+          <h1>Jobs Viewer</h1>
+          <div class="sub">
+            Paste a JSON array of jobs, then filter by date range and keyword.
+            Cards open in a new tab.
+          </div>
+        </div>
+      </header>
+
+      <div class="panel">
+        <div class="panelHead">
+          <div class="field">
+            <label for="jsonInput">Jobs JSON (array)</label>
+            <textarea
+              id="jsonInput"
+              class="jsonArea"
+              spellcheck="false"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="field">
+            <label for="keyword">Keyword</label>
+            <input
+              id="keyword"
+              class="input"
+              placeholder="Search title, company, location, tags..."
+            />
+          </div>
+          <div class="field">
+            <label for="dateFrom">From (created_at)</label>
+            <input id="dateFrom" class="input" type="date" />
+          </div>
+          <div class="field">
+            <label for="dateTo">To (created_at)</label>
+            <input id="dateTo" class="input" type="date" />
+          </div>
+          <button id="applyBtn" class="btn" type="button">Apply</button>
+        </div>
+
+        <div class="statusRow">
+          <div id="status">Ready.</div>
+          <div>
+            Tip: Use <span class="kbd">Ctrl</span> +
+            <span class="kbd">F</span> inside JSON if needed
+          </div>
+        </div>
+      </div>
+
+      <div id="jobs" class="grid"></div>
+    </div>
+
+    <script>
+      // Default sample data (you can paste your own JSON array in the textarea)
+      const defaultData = [
+        {
+          id: 509324,
+          title: "Senior Software Engineer",
+          description:
+            "**Responsibilities**\n\n- Design, develop, and maintain scalable backend services using **NestJS** and **Go**.\n- Build responsive and maintainable frontend applications using **React** and **TypeScript**.\n- Collaborate with cross-functional teams to define, design, and ship new features.\n- Provide inputs in architectural discussions and decision making, ensuring best practices across performance, security, and maintainability.\n- Manage databases including **MongoDB** and **PostgreSQL**, and write efficient queries.\n- Deploy, monitor, and troubleshoot applications in **AWS** cloud environments.\n- Work closely with IoT systems to ensure seamless data ingestion, transformation, and analysis.\n- Conduct code reviews, provide feedback, and mentor junior developers.\n- Work in an Agile environment with continuous integration and delivery.\n\n**Requirements**\n\n- Bachelor’s degree in Computer Science, Engineering, or a related field.\n- **3+ years** of experience in full-stack development with real-world production systems.\n- Proficient in **TypeScript** and backend development with **NestJS** and **Go**.\n- Strong understanding of **React** and modern frontend architectures.\n- Experience with **MongoDB**, **PostgreSQL**, and designing scalable database schemas.\n- Proficient in building and deploying applications on **AWS** (EC2, Lambda, S3, etc.).\n- Hands-on experience with RESTful APIs, WebSockets, and third-party integrations.\n- Familiarity with DevOps, CI/CD pipelines is a plus\n- Strong communication and collaboration skills.\n- Be a good team player\n\n**Nice to Have**\n\n- Experience working with **IoT platforms**, **device protocols**, or **sensor data processing**.\n- Familiarity with **LoRaWAN**, **MQTT**, or other IoT communication standards.\n- Experience integrating backend services with **edge devices** and **cloud-based IoT pipelines**.\n- Exposure to microservices and event-driven architectures.\n- Familiarity with Docker and container orchestration (e.g., ECS, EKS).\n- Understanding of observability tools (e.g., Sentry, Datadog, Prometheus).\n- Prior experience working with international teams or clients.\n- Exposure to Agile methodologies like Scrum or Kanban.",
+          company_id: 152291,
+          job_type: "full-time",
+          location: "Colombo, Sri Lanka",
+          department: "Engineering",
+          tags: [
+            "nestjs",
+            "go",
+            "react ",
+            "typescript. ",
+            "mongodb",
+            "postgresql",
+            "aws ",
+            "iot platforms",
+            "cloud-based iot pipelines. ",
+            "lorawan",
+            " mqtt",
+          ],
+          created_at: "2025-07-14 12:33:29",
+          updated_at: "2025-12-13 01:52:23",
+          remote: false,
+          subclass: "Engineering - Software",
+          subsidiary_company_industry: null,
+          company_name: "Save Energy Systems ",
+          subsidiary_company_name: null,
+          company_logo_url:
+            "https://rooster-prod-prod-manage-bulk-operations-bucket.s3.amazonaws.com/companyLogos/WhatsApp_Image_2025-08-15_at_12.11.14_AM.png_1755196999786",
+          subsidiary_company_logo_url: null,
+          min_salary: null,
+          max_salary: null,
+          salary_frequency: null,
+          salary_currency: null,
+          is_verified: true,
+          class: "Information & Communication Technology",
+        },
+        {
+          id: 511935,
+          title: "Associate Frontend Developer ",
+          description:
+            "**About the Role:**\nWe are looking for a passionate **Associate Frontend Developer** with hands-on experience in **Next.js** and **React.js** to join our growing development team. The ideal candidate should have at least **1 year of professional experience** in building modern, responsive, and user-friendly web applications.\n\n**Responsibilities:**\n\n- Develop and maintain responsive web applications using **Next.js** and **React.js**\n- Collaborate with UI/UX designers and backend developers to deliver seamless user experiences\n- Optimize applications for maximum performance and scalability\n- Write clean, maintainable, and well-documented code\n- Participate in code reviews and contribute to continuous improvement\n\n**Requirements:**\n\n- Minimum **1 year of experience** working with **Next.js** and **React.js**\n- Strong understanding of JavaScript (ES6+), HTML5, tailwind css, and CSS3\n- Familiarity with RESTful APIs and JSON\n- Basic knowledge of Git and version control\n- Understanding of frontend build tools and workflows\n\n**Nice to Have:**\n\n- Experience with TypeScript\n- Familiarity with Tailwind CSS or Material UI\n- Understanding of SEO best practices for Next.js applications",
+          company_id: 13033,
+          job_type: "full-time",
+          location: "Colombo, Sri Lanka",
+          department: "IT",
+          tags: ["it"],
+          created_at: "2025-10-10 11:22:11",
+          updated_at: "2025-10-10 11:25:04",
+          remote: false,
+          subclass: "Developers/Programmers",
+          subsidiary_company_industry: null,
+          company_name: "Hype Invention ",
+          subsidiary_company_name: null,
+          company_logo_url:
+            "https://rooster-prod-prod-core-bucket.s3.amazonaws.com/companyLogos/Logo_new.jpg_1663320346339",
+          subsidiary_company_logo_url: null,
+          min_salary: null,
+          max_salary: null,
+          salary_frequency: null,
+          salary_currency: null,
+          is_verified: true,
+          class: "Information & Communication Technology",
+        },
+      ];
+
+      function toMs(sqlDateTime) {
+        // "YYYY-MM-DD HH:mm:ss" -> Date.parse("YYYY-MM-DDTHH:mm:ss")
+        const isoLike = String(sqlDateTime || "").replace(" ", "T");
+        const ms = Date.parse(isoLike);
+        return Number.isNaN(ms) ? 0 : ms;
+      }
+
+      function toYmd(sqlDateTime) {
+        const s = String(sqlDateTime || "");
+        return s.length >= 10 ? s.slice(0, 10) : "";
+      }
+
+      function cleanTags(tags) {
+        return (tags || [])
+          .map((t) => String(t).trim())
+          .filter(Boolean)
+          .slice(0, 6);
+      }
+
+      function normalizeText(v) {
+        return String(v || "")
+          .toLowerCase()
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+
+      function matchesKeyword(job, keyword) {
+        if (!keyword) return true;
+        const hay = normalizeText(
+          [
+            job.title,
+            job.company_name,
+            job.location,
+            job.job_type,
+            job.department,
+            job.subclass,
+            job.class,
+            Array.isArray(job.tags) ? job.tags.join(" ") : "",
+            job.description,
+          ].join(" ")
+        );
+        return hay.includes(keyword);
+      }
+
+      function inDateRange(job, fromYmd, toYmd) {
+        const ymd = toYmdFn(job.created_at);
+        if (!ymd) return false;
+        if (fromYmd && ymd < fromYmd) return false;
+        if (toYmd && ymd > toYmd) return false;
+        return true;
+
+        function toYmdFn(sqlDateTime) {
+          const s = String(sqlDateTime || "");
+          return s.length >= 10 ? s.slice(0, 10) : "";
+        }
+      }
+
+      function safeParseJson(text) {
+        const raw = String(text || "").trim();
+        if (!raw) return { ok: true, data: [] };
+
+        try {
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) {
+            return {
+              ok: false,
+              error: "JSON must be an array of job objects.",
+            };
+          }
+          return { ok: true, data: parsed };
+        } catch (e) {
+          return {
+            ok: false,
+            error: "Invalid JSON. Please paste a valid JSON array.",
+          };
+        }
+      }
+
+      function setStatus(msg, isError = false) {
+        const el = document.getElementById("status");
+        el.textContent = msg;
+        el.className = isError ? "error" : "";
+      }
+
+      function render(list) {
+        // Newest first by created_at
+        const sorted = [...list].sort(
+          (a, b) => toMs(b.created_at) - toMs(a.created_at)
+        );
+
+        const root = document.getElementById("jobs");
+        root.innerHTML = "";
+
+        if (!sorted.length) {
+          const empty = document.createElement("div");
+          empty.style.gridColumn = "1 / -1";
+          empty.style.padding = "18px";
+          empty.style.border = "1px solid rgba(17, 24, 39, 0.08)";
+          empty.style.borderRadius = "14px";
+          empty.style.background = "#ffffff";
+          empty.textContent = "No results. Try changing your filters.";
+          root.appendChild(empty);
+          return;
+        }
+
+        sorted.forEach((job) => {
+          const btn = document.createElement("button");
+          btn.className = "card";
+          btn.type = "button";
+
+          // click -> open job url with id in a new tab
+          btn.addEventListener("click", () => {
+            const url = `https://rooster.jobs/jobs/${job.id}`;
+            window.open(url, "_blank", "noopener,noreferrer");
+          });
+
+          const logo = job.company_logo_url
+            ? `<img class="logo" src="${
+                job.company_logo_url
+              }" alt="${escapeHtml((job.company_name || "Company").trim())}" />`
+            : `<div class="logo" aria-hidden="true"></div>`;
+
+          const tags = cleanTags(job.tags)
+            .map((t) => `<span class="chip">${escapeHtml(t)}</span>`)
+            .join("");
+
+          const posted = job.created_at ? escapeHtml(job.created_at) : "";
+          const company = escapeHtml(
+            (job.company_name || "Unknown company").trim()
+          );
+          const location = escapeHtml(
+            (job.location || "Unknown location").trim()
+          );
+          const title = escapeHtml((job.title || "").trim());
+          const jobType = escapeHtml(job.job_type || "N/A");
+
+          btn.innerHTML = `
+            <div class="row">
+              ${logo}
+              <div style="min-width:0; flex:1;">
+                <p class="title">${title}</p>
+                <div class="meta"><strong>${company}</strong> • ${location}</div>
+                <div class="chips">
+                  <span class="chip">${jobType}</span>
+                  <span class="chip">${job.remote ? "Remote" : "On-site"}</span>
+                  ${tags}
+                </div>
+                <div class="footer">
+                  <span>Posted: ${posted}</span>
+                  <span class="kbd">Opens in new tab</span>
+                </div>
+              </div>
+            </div>
+          `;
+
+          root.appendChild(btn);
+        });
+      }
+
+      function applyAll() {
+        const jsonText = document.getElementById("jsonInput").value;
+        const keywordRaw = document.getElementById("keyword").value;
+        const fromYmd = document.getElementById("dateFrom").value;
+        const toYmd = document.getElementById("dateTo").value;
+
+        const keyword = normalizeText(keywordRaw);
+        const parsed = safeParseJson(jsonText);
+
+        if (!parsed.ok) {
+          setStatus(parsed.error, true);
+          render([]);
+          return;
+        }
+
+        const list = parsed.data;
+        const filtered = list
+          .filter((j) => inDateRange(j, fromYmd, toYmd))
+          .filter((j) => matchesKeyword(j, keyword));
+
+        setStatus(`Showing ${filtered.length} of ${list.length} jobs.`);
+        render(filtered);
+      }
+
+      function seedUi() {
+        // Put default data in textarea for easy copy/edit
+        const jsonInput = document.getElementById("jsonInput");
+        jsonInput.value = JSON.stringify(defaultData, null, 2);
+
+        // Set a reasonable initial date range from default data
+        const dates = defaultData
+          .map((j) => toYmd(j.created_at))
+          .filter(Boolean)
+          .sort();
+
+        const dateFrom = document.getElementById("dateFrom");
+        const dateTo = document.getElementById("dateTo");
+
+        if (dates.length) {
+          dateFrom.value = dates[0];
+          dateTo.value = dates[dates.length - 1];
+        }
+
+        setStatus(`Ready. Loaded ${defaultData.length} sample jobs.`);
+      }
+
+      // Lightweight debounce for typing
+      function debounce(fn, wait) {
+        let t;
+        return (...args) => {
+          clearTimeout(t);
+          t = setTimeout(() => fn(...args), wait);
+        };
+      }
+
+      // Wire up events
+      const applyBtn = document.getElementById("applyBtn");
+      applyBtn.addEventListener("click", applyAll);
+
+      document
+        .getElementById("keyword")
+        .addEventListener("input", debounce(applyAll, 180));
+      document.getElementById("dateFrom").addEventListener("change", applyAll);
+      document.getElementById("dateTo").addEventListener("change", applyAll);
+
+      // Auto-apply after JSON edits (debounced)
+      document
+        .getElementById("jsonInput")
+        .addEventListener("input", debounce(applyAll, 400));
+
+      seedUi();
+      applyAll();
+
+      function escapeHtml(str) {
+        return String(str)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+    </script>
+  </body>
+</html>

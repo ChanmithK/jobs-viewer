@@ -287,7 +287,7 @@
       <div class="panel">
         <div class="panelHead">
           <div class="field">
-            <label for="jsonInput">Jobs JSON (array)</label>
+            <label for="jsonInput">Jobs JSON (array or object with data)</label>
             <textarea
               id="jsonInput"
               class="jsonArea"
@@ -462,17 +462,44 @@
 
         try {
           const parsed = JSON.parse(raw);
-          if (!Array.isArray(parsed)) {
-            return {
-              ok: false,
-              error: "JSON must be an array of job objects.",
-            };
+
+          // Allow either:
+          // 1) A JSON array: [ {...}, {...} ]
+          // 2) A JSON object with a `data` array: { data: [ {...}, {...} ], ... }
+          if (Array.isArray(parsed)) {
+            return { ok: true, data: parsed };
           }
-          return { ok: true, data: parsed };
+
+          if (parsed && typeof parsed === "object") {
+            // Supported shapes:
+            // 1) [ {...} ]
+            // 2) { data: [...] }
+            // 3) { data: { data: [...] } }
+            // 4) { body: { data: [...] } }  <-- your API response
+
+            const d1 = parsed.data;
+            if (Array.isArray(d1)) return { ok: true, data: d1 };
+
+            if (d1 && typeof d1 === "object" && Array.isArray(d1.data)) {
+              return { ok: true, data: d1.data };
+            }
+
+            const b1 = parsed.body;
+            if (b1 && typeof b1 === "object" && Array.isArray(b1.data)) {
+              return { ok: true, data: b1.data };
+            }
+          }
+
+          return {
+            ok: false,
+            error:
+              "Paste a JSON array OR an object that contains a `data` array.",
+          };
         } catch (e) {
           return {
             ok: false,
-            error: "Invalid JSON. Please paste a valid JSON array.",
+            error:
+              "Invalid JSON. Please paste a valid JSON array (or an object with a `data` array).",
           };
         }
       }
@@ -573,7 +600,7 @@
           return;
         }
 
-        const list = parsed.data;
+        const list = Array.isArray(parsed.data) ? parsed.data : [];
         const filtered = list
           .filter((j) => inDateRange(j, fromYmd, toYmd))
           .filter((j) => matchesKeyword(j, keyword));
@@ -586,21 +613,6 @@
         // Put default data in textarea for easy copy/edit
         const jsonInput = document.getElementById("jsonInput");
         jsonInput.value = JSON.stringify(defaultData, null, 2);
-
-        // Set a reasonable initial date range from default data
-        const dates = defaultData
-          .map((j) => toYmd(j.created_at))
-          .filter(Boolean)
-          .sort();
-
-        const dateFrom = document.getElementById("dateFrom");
-        const dateTo = document.getElementById("dateTo");
-
-        if (dates.length) {
-          dateFrom.value = dates[0];
-          dateTo.value = dates[dates.length - 1];
-        }
-
         setStatus(`Ready. Loaded ${defaultData.length} sample jobs.`);
       }
 
